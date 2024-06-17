@@ -1,4 +1,4 @@
-import { Container, Text, VStack, Button, Input, Box, useToast } from "@chakra-ui/react";
+import { Container, Text, VStack, Button, Input, Box, useToast, Textarea } from "@chakra-ui/react";
 import { useState } from "react";
 
 const Index = () => {
@@ -33,12 +33,43 @@ const Index = () => {
     }
   };
 
+  const handleChatGPT = async () => {
+    try {
+      const res = await fetch("https://api.openai.com/v1/engines/davinci-codex/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer YOUR_OPENAI_API_KEY`,
+        },
+        body: JSON.stringify({
+          prompt: input,
+          max_tokens: 150,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to get response from ChatGPT");
+      }
+
+      const data = await res.json();
+      setResponse(data.choices[0].text);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Container centerContent maxW="container.md" height="100vh" display="flex" flexDirection="column" justifyContent="center" alignItems="center">
       <VStack spacing={4} width="100%">
         <Text fontSize="2xl">Code Execution Tool</Text>
-        <Input
-          placeholder="Enter your code here..."
+        <Textarea
+          placeholder="Enter your code or question here..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           size="lg"
@@ -46,10 +77,13 @@ const Index = () => {
         <Button colorScheme="teal" size="lg" onClick={handleExecute}>
           Execute Code
         </Button>
+        <Button colorScheme="blue" size="lg" onClick={handleChatGPT}>
+          Ask ChatGPT
+        </Button>
         {response && (
           <Box p={4} bg="gray.100" width="100%" borderRadius="md">
             <Text>Response:</Text>
-            <Text>{response}</Text>
+            <Text whiteSpace="pre-wrap">{response}</Text>
           </Box>
         )}
       </VStack>
